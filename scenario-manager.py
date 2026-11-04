@@ -1,46 +1,47 @@
 import time
 
+log_file = "/var/log/suricata/fast.log"
+flags_path = "/var/www/html/flags/"
+flags_source_path = "/etc/scenario-manager/"
+last_checked_line = 0
+
 detections = [
     {
         "message": "Possible ICMP Flood Detected",
         "lastDetection": None,
         "isDetected": False,
         "fileName": "icmp",
-        "flag": "FLAG(ICMP_FLOOD)",
+        "flag": "flag3.txt",
     },
     {
         "message": "Possible HTTP POST Flood Detected",
         "lastDetection": None,
         "isDetected": False,
         "fileName": "httppost",
-        "flag": "FLAG(HTTP_POST_FLOOD)",
+        "flag": "flag4.txt",
     },
     {
         "message": "Possible ReDoS Detected",
         "lastDetection": None,
         "isDetected": False,
         "fileName": "redos",
-        "flag": "FLAG(ReDoS)",
+        "flag": "flag5.txt",
     },
     {
         "message": "Possible Slowloris Detected",
         "lastDetection": None,
         "isDetected": False,
         "fileName": "slowloris",
-        "flag": "FLAG(Slowloris)",
+        "flag": "flag6.txt",
     },
     {
         "message": "Possible SYN Flood Detected",
         "lastDetection": None,
         "isDetected": False,
         "fileName": "synflood",
-        "flag": "FLAG(SYNflood)",
+        "flag": "flag8.txt",
     }
 ]
-
-log_file = "/var/log/suricata/fast.log"
-flags_path = "/var/www/htmlflags/"
-last_checked_line = 0
 
 def check_for_detections():
     global last_checked_line
@@ -49,8 +50,8 @@ def check_for_detections():
         for i in range(last_checked_line, len(lines)):
             for j, detection in enumerate(detections):
                 if (
-                    detection["message"] in lines[i] and 
-                    (j == 0 or detections[j - 1]["isDetected"]) and 
+                    detection["message"] in lines[i] and
+                    (j == 0 or detections[j - 1]["isDetected"]) and
                     (detection["lastDetection"] is None or (time.time() - detection["lastDetection"]) > 30)
                 ):
                     detection["lastDetection"] = time.time()
@@ -59,8 +60,10 @@ def check_for_detections():
         last_checked_line = len(lines)
 
 def create_flag(detection):
+    with open(flags_source_path + detection["flag"], "r") as src:
+        flag = src.read().strip()
     with open(flags_path + detection["fileName"] + ".txt", "w") as file:
-        file.write(detection["flag"])
+        file.write(flag)
     print("Flag Created: " + detection["fileName"] + ".txt")
 
 def main():
@@ -74,4 +77,3 @@ def main():
 if __name__ == "__main__":
     print("[*] Starting Scenario Manager [*]")
     main()
-
